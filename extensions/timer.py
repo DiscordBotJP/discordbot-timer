@@ -4,6 +4,7 @@ from daug.utils.dpyexcept import excepter
 import asyncio
 import re
 import time
+from utils.dashboard_config import DashboardConfigCache
 from utils.ops_log import emit_message_command_error
 
 seconds_pattern = re.compile(r'\d+秒')
@@ -15,6 +16,8 @@ minutes_countdown_pattern = re.compile(r'\d+分(!|！)')
 class TimerCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+        self.dashboard_config = DashboardConfigCache()
+        self.last_response_at_by_guild: dict[int, float] = {}
 
     @commands.Cog.listener()
     @excepter
@@ -28,6 +31,27 @@ class TimerCog(commands.Cog):
     async def _handle_timer_message(self, message: discord.Message):
         if message.author.bot:
             return
+        if not any(
+            pattern.fullmatch(message.content)
+            for pattern in (
+                seconds_pattern,
+                minutes_pattern,
+                seconds_countdown_pattern,
+                minutes_countdown_pattern,
+            )
+        ):
+            return
+        if message.guild is not None:
+            settings = await self.dashboard_config.get()
+            dashboard_setting = settings.for_guild(message.guild.id)
+            if not dashboard_setting.enabled:
+                return
+            last_response_at = self.last_response_at_by_guild.get(message.guild.id, 0)
+            interval_seconds = dashboard_setting.interval_minutes * 60
+            if interval_seconds > 0 and time.monotonic() - last_response_at < interval_seconds:
+                return
+            self.last_response_at_by_guild[message.guild.id] = time.monotonic()
+
         if seconds_pattern.fullmatch(message.content):
             seconds = int(message.content.split('秒')[0])
             if seconds > 10 * 60:
