@@ -20,6 +20,8 @@ class GuildDashboardSetting:
     interval_minutes: int
     anchor_time: str
     timezone: str
+    max_timer_seconds: int
+    countdown_enabled: bool
 
 
 class DashboardSettings:
@@ -43,6 +45,8 @@ class DashboardSettings:
             interval_minutes=int(raw.get('intervalMinutes') or 0),
             anchor_time=str(raw.get('anchorTime') or '00:00'),
             timezone=str(raw.get('timezone') or 'Asia/Tokyo'),
+            max_timer_seconds=_clamp_int(raw.get('maxTimerSeconds'), 1, 600, 600),
+            countdown_enabled=raw.get('countdownEnabled') is not False,
         )
 
 
@@ -101,3 +105,11 @@ async def fetch_dashboard_settings() -> DashboardSettings:
 def _sign(value: str, secret: str) -> str:
     digest = hmac.new(secret.encode(), value.encode(), hashlib.sha256).digest()
     return base64.urlsafe_b64encode(digest).decode().rstrip('=')
+
+
+def _clamp_int(value: Any, minimum: int, maximum: int, fallback: int) -> int:
+    try:
+        numeric = int(value)
+    except (TypeError, ValueError):
+        return fallback
+    return max(minimum, min(maximum, numeric))

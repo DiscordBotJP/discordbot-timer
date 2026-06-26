@@ -45,5 +45,5 @@ Bot はメッセージ本文を読むため、Discord Developer Portal で Messa
 ## Discord Bot JP dashboard 連携
 
 `DASHBOARD_BOT_CONFIG_SECRET` を設定すると、Bot は `DASHBOARD_CONFIG_URL` から `DASHBOARD_CONFIG_BOT_ID` のサーバー別設定を署名付きで取得します。
-dashboard ではサーバーごとの有効/無効、最小応答間隔、基準時刻を保存できます。
+dashboard ではサーバーごとの有効/無効、最小応答間隔、最大計測秒数、カウントダウン通知を保存できます。
 Bot は無効化されたサーバーでは反応せず、最小応答間隔が設定されている場合は連続返信を抑制します。

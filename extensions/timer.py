@@ -41,10 +41,18 @@ class TimerCog(commands.Cog):
             )
         ):
             return
+        is_countdown = bool(
+            seconds_countdown_pattern.fullmatch(message.content)
+            or minutes_countdown_pattern.fullmatch(message.content)
+        )
+        dashboard_setting = None
         if message.guild is not None:
             settings = await self.dashboard_config.get()
             dashboard_setting = settings.for_guild(message.guild.id)
             if not dashboard_setting.enabled:
+                return
+            if is_countdown and not dashboard_setting.countdown_enabled:
+                await message.reply('カウントダウン通知はこのサーバーでは無効です', delete_after=10)
                 return
             last_response_at = self.last_response_at_by_guild.get(message.guild.id, 0)
             interval_seconds = dashboard_setting.interval_minutes * 60
@@ -52,18 +60,20 @@ class TimerCog(commands.Cog):
                 return
             self.last_response_at_by_guild[message.guild.id] = time.monotonic()
 
+        max_timer_seconds = dashboard_setting.max_timer_seconds if dashboard_setting else 600
+
         if seconds_pattern.fullmatch(message.content):
             seconds = int(message.content.split('秒')[0])
-            if seconds > 10 * 60:
-                await message.reply('10分以内の計測が可能です', delete_after=10)
+            if seconds > max_timer_seconds:
+                await message.reply(f'{max_timer_seconds}秒以内の計測が可能です', delete_after=10)
                 return
             await message.reply(f'{seconds}秒測ります（計測終了:<t:{int(time.time()) + seconds + 1}:R>）')
             await asyncio.sleep(seconds)
             await message.channel.send(f'{seconds}秒が経過しました {message.author.mention}')
         if minutes_pattern.fullmatch(message.content):
             minutes = int(message.content.split('分')[0])
-            if minutes > 10:
-                await message.reply('10分以内の計測が可能です', delete_after=10)
+            if minutes * 60 > max_timer_seconds:
+                await message.reply(f'{max_timer_seconds}秒以内の計測が可能です', delete_after=10)
                 return
             await message.reply(f'{minutes}分測ります（計測終了:<t:{int(time.time()) + 60 * minutes + 1}:R>）')
             await asyncio.sleep(minutes * 60)
@@ -71,8 +81,8 @@ class TimerCog(commands.Cog):
         if seconds_countdown_pattern.fullmatch(message.content):
             seconds = int(message.content.split('秒')[0])
             time_str = f'{seconds}秒'
-            if seconds > 10 * 60:
-                await message.reply('10分以内の計測が可能です', delete_after=10)
+            if seconds > max_timer_seconds:
+                await message.reply(f'{max_timer_seconds}秒以内の計測が可能です', delete_after=10)
                 return
             await message.reply(f'{time_str}測ります')
             if seconds > 30:
@@ -87,8 +97,8 @@ class TimerCog(commands.Cog):
             await message.channel.send(f'{time_str}が経過しました {message.author.mention}')
         if minutes_countdown_pattern.fullmatch(message.content):
             minutes = int(message.content.split('分')[0])
-            if minutes > 10:
-                await message.reply('10分以内の計測が可能です', delete_after=10)
+            if minutes * 60 > max_timer_seconds:
+                await message.reply(f'{max_timer_seconds}秒以内の計測が可能です', delete_after=10)
                 return
             time_str = f'{minutes}分'
             await message.reply(f'{time_str}測ります')
