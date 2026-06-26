@@ -19,6 +19,7 @@
 | `OPS_LOG_PROJECT` | いいえ | ops-log project 名。既定値: `discordbot-timer` |
 | `OPS_LOG_ENVIRONMENT` | いいえ | `production` / `development` など |
 | `DASHBOARD_CONFIG_URL` | いいえ | Discord Bot JP dashboard の runtime settings endpoint |
+| `DASHBOARD_CONFIG_BOT_ID` | いいえ | dashboard 内の Bot ID。既定値: `bot_a058221104` |
 | `DASHBOARD_BOT_CONFIG_SECRET` | いいえ | dashboard 設定取得用の共有シークレット |
 
 ## 運用ログ
@@ -43,6 +44,6 @@ Bot はメッセージ本文を読むため、Discord Developer Portal で Messa
 
 ## Discord Bot JP dashboard 連携
 
-`DASHBOARD_BOT_CONFIG_SECRET` を設定すると、Bot は `DASHBOARD_CONFIG_URL` からサーバー別設定を署名付きで取得します。
+`DASHBOARD_BOT_CONFIG_SECRET` を設定すると、Bot は `DASHBOARD_CONFIG_URL` から `DASHBOARD_CONFIG_BOT_ID` のサーバー別設定を署名付きで取得します。
 dashboard ではサーバーごとの有効/無効、最小応答間隔、基準時刻を保存できます。
 Bot は無効化されたサーバーでは反応せず、最小応答間隔が設定されている場合は連続返信を抑制します。
